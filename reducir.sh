@@ -7,7 +7,7 @@ do
                 echo "No es un número valido, solo se aceptan numeros entre 3 y 10." >&2; exit 1
             fi
 
-            pip3 install python-sat
+            pip3 install python-sat wrapt_timeout_decorator
             python3 ./main.py $OPTARG
             exit 1
             ;;
