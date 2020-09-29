@@ -19,11 +19,9 @@ def run_multiprocessing(func, i, sat, timeout_time, n_processors):
 '''Define task function'''
 def control_proccess_sat_file(filename, sat, timeout_time):
     try:
-        timeout(timeoutTime)(proccess_sat_file)(sat, filename)
-        return True
+        timeout(timeout_time)(proccess_sat_file)(sat, filename)
     except TimeoutError:
-        print(filename)
-        return True
+        print("Archivo", filename, "|| Excedió el tiempo de ejecución de", timeout_time, "segundos.")
 
 
 def main(sat, timeout_time):
@@ -53,12 +51,16 @@ if __name__ == "__main__":
         print("Ingrese un numero entre 3 y 10.")
         exit()
 
-    SAT = int(sys.argv[1].strip())
-    if SAT < 3 or SAT > 10:
+    sat = int(sys.argv[1].strip())
+    if sat < 3 or sat > 10:
         print("Ingrese un numero entre 3 y 10.")
         exit()
 
-    timeoutTime = 30
+    timeout_time = 240
+    if len(sys.argv) >= 3 and sys.argv[2].strip() != "":
+        temp_timeout_time = int(sys.argv[2].strip())
+        if temp_timeout_time > 0:
+            timeout_time = temp_timeout_time
 
     if os.path.exists('./X-SAT'):
         shutil.rmtree('./X-SAT', ignore_errors=True)
@@ -66,4 +68,4 @@ if __name__ == "__main__":
     os.makedirs('./X-SAT')
 
     freeze_support()   # required to use multiprocessing
-    main(SAT, timeoutTime)
+    main(sat, timeout_time)

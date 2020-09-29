@@ -108,7 +108,7 @@ def proccess_sat_file(sat, filename):
   with Glucose4(bootstrap_with=clauses) as m:
     solucion_xsat = m.solve()
 
-  print("Solucion", filename, "|| solucion original:", solucion_original, "|| solucion " + str(sat) + "-SAT:", solucion_xsat, "|| coinciden:", solucion_original == solucion_xsat)
+  print("Archivo", filename, "|| solucion original:", solucion_original, "|| solucion " + str(sat) + "-SAT:", solucion_xsat, "|| coinciden:", solucion_original == solucion_xsat)
 
   formula.clauses = clauses
   formula.nv = nv
