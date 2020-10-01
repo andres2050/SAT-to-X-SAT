@@ -13,6 +13,9 @@ solvers_avaliable = {
   "minisatgh": solvers.MinisatGH,
 }
 
+'''
+solve_clauses: Solves clauses with the specified SAT solver.
+'''
 def solve_clauses(clauses, solver="gloucose4"):
   solution = False
 
@@ -21,5 +24,8 @@ def solve_clauses(clauses, solver="gloucose4"):
 
   return solution
 
+'''
+is_solver_avaliable: By means of a key see if the SAT solution is available.
+'''
 def is_solver_avaliable(solver):
   return solvers_avaliable.get(solver) != None

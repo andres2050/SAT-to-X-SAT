@@ -87,6 +87,9 @@ def sat_to_3_sat(clauses, nv):
 
   return clauses, nv
 
+'''
+reduce_to_x_sat: It takes clauses on 3-SATs and brings them to a given X-SAT.
+'''
 def reduce_to_x_sat(clauses, nv):
   size = len(clauses)
   for i in range(size):
@@ -99,6 +102,10 @@ def reduce_to_x_sat(clauses, nv):
 
   return clauses, nv
 
+'''
+proccess_sat_file: It obtains the file, reduces it to X-SAT, obtains the solution for both the original and the reduced, 
+                  stores the reduced and delivers the result of the whole process.
+'''
 def proccess_sat_file(filename, sat, solver):
   start_time = time.time()
 
