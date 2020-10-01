@@ -4,7 +4,13 @@ import time
 from pysat.formula import CNF
 from solvers import *
 
+'''
+split_list: Based on a length it divides an array and creates an array of arrays.
+'''
 def split_list(list_input, length):
+  if len(list_input) == 0:
+    return []
+
   result = [list_input[:length]]
   residue = list_input[length:]
 
@@ -14,6 +20,9 @@ def split_list(list_input, length):
 
   return result
 
+'''
+sat_to_3_sat: Complete and divide the clauses in order to bring them to 3-sat
+'''
 def sat_to_3_sat(clauses, nv):
   i = 0
   while i < len(clauses):
@@ -48,27 +57,21 @@ def sat_to_3_sat(clauses, nv):
       clause.append(-nv)
       clauses.append(clause[:])
 
-    elif clause_length == 4:
-      nv += 1
-      division = split_list(clauses[i][:], 2)
-      
-      division[0].append(nv)
-      division[1].append(-nv)
-      clauses[i] = division[0][:]
-      clauses.append(division[1][:])
-
-    elif clause_length > 4:
+    elif clause_length > 3:
       nv += 1
       first = clauses[i][:2]
       last = clauses[i][-2:]
 
       residue = clauses[i][2:-2]
       division = split_list(residue, 1)
+      division_length = len(division)
+      if division_length == 0:
+        clause = [-nv]
 
       first.append(nv)
       clauses[i] = first
 
-      for j in range(len(division)):
+      for j in range(division_length):
         clause = [-nv]
         clause.append(division[j][0])
 
@@ -119,4 +122,4 @@ def proccess_sat_file(filename, sat, solver):
   elapsed_time = time.time() - start_time
   match = original_solution == x_sat_solution
 
-  print("Archivo {} || solucionador de sat {} || solucion original: {} || solucion {}-SAT: {} || coinciden: {} || Tiempo ejecución: {}".format(filename, solver, original_solution, sat, x_sat_solution, match, elapsed_time))
+  print("Archivo {} || solucionador de sat {} || solucion original: {} || solucion {}-SAT: {} || coinciden: {} || Tiempo ejecución: {:.10f} segundos".format(filename, solver, original_solution, sat, x_sat_solution, match, elapsed_time))
