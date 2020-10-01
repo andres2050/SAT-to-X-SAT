@@ -1,9 +1,12 @@
-from pysat.formula import CNF
-from pysat.solvers import Glucose4
+# -*- coding: utf-8 -*-
 
-def divide_list(listInput, length):
-  result = [listInput[:length]]
-  residue = listInput[length:]
+import time
+from pysat.formula import CNF
+from solvers import *
+
+def split_list(list_input, length):
+  result = [list_input[:length]]
+  residue = list_input[length:]
 
   while len(residue) != 0:
     result.append(residue[:length])
@@ -11,105 +14,109 @@ def divide_list(listInput, length):
 
   return result
 
-def sat_a_3sat(clauses, nv):
+def sat_to_3_sat(clauses, nv):
   i = 0
   while i < len(clauses):
-    len_current = len(clauses[i])
+    clause_length = len(clauses[i])
 
-    if len_current == 1:
+    if clause_length == 1:
       nv += 1
-      temp1 = clauses[i][:]
-      temp2 = clauses[i][:]
-      temp1.append(nv)
-      temp2.append(-nv)
+      clause1 = clauses[i][:]
+      clause2 = clauses[i][:]
+      clause1.append(nv)
+      clause2.append(-nv)
 
       nv += 1
-      temp3 = temp1[:]
-      temp4 = temp2[:]
+      clause3 = clause1[:]
+      clause4 = clause2[:]
 
-      temp1.append(nv)
-      temp2.append(nv)
-      temp3.append(-nv)
-      temp4.append(-nv)
+      clause1.append(nv)
+      clause2.append(nv)
+      clause3.append(-nv)
+      clause4.append(-nv)
 
-      clauses[i] = temp1[:]
-      clauses.append(temp2[:])
-      clauses.append(temp3[:])
-      clauses.append(temp4[:])
-    elif len_current == 2:
+      clauses[i] = clause1[:]
+      clauses.append(clause2[:])
+      clauses.append(clause3[:])
+      clauses.append(clause4[:])
+
+    elif clause_length == 2:
       nv += 1
-      temp = clauses[i][:]
+      clause = clauses[i][:]
 
       clauses[i].append(nv)
-      temp.append(-nv)
-      clauses.append(temp[:])
-    elif len_current == 4:
+      clause.append(-nv)
+      clauses.append(clause[:])
+
+    elif clause_length == 4:
       nv += 1
-      division = divide_list(clauses[i][:], 2)
+      division = split_list(clauses[i][:], 2)
       
       division[0].append(nv)
       division[1].append(-nv)
       clauses[i] = division[0][:]
       clauses.append(division[1][:])
-    elif len_current > 4:
+
+    elif clause_length > 4:
       nv += 1
       first = clauses[i][:2]
       last = clauses[i][-2:]
+
       residue = clauses[i][2:-2]
-      division = divide_list(residue, 1)
+      division = split_list(residue, 1)
 
       first.append(nv)
       clauses[i] = first
+
       for j in range(len(division)):
-        temp = [-nv]
-        temp.append(division[j][0])
+        clause = [-nv]
+        clause.append(division[j][0])
 
         nv += 1
-        temp.append(nv)
-        clauses.append(temp[:])
+        clause.append(nv)
+        clauses.append(clause[:])
 
-      temp.extend(last)
-      clauses.append(temp[:])
+      clause.extend(last)
+      clauses.append(clause[:])
+
     else:
       i += 1
 
   return clauses, nv
 
-def reducir_a_xsat(clauses, nv):
-  tamaño = len(clauses)
-  for i in range(tamaño):
+def reduce_to_x_sat(clauses, nv):
+  size = len(clauses)
+  for i in range(size):
     nv += 1
-    temp = clauses[i][:]
+    clause = clauses[i][:]
+
     clauses[i].append(nv)
-    temp.append(-nv)
-    clauses.append(temp[:])
+    clause.append(-nv)
+    clauses.append(clause[:])
 
   return clauses, nv
 
-def proccess_sat_file(sat, filename):
+def proccess_sat_file(filename, sat, solver):
+  start_time = time.time()
+
   formula = CNF(from_file="./InstanciasSAT/" + filename)
-  solucion_original = False
-
-  with Glucose4(bootstrap_with=formula.clauses[:]) as m:
-    solucion_original = m.solve()
-
   clauses = formula.clauses[:]
   nv = formula.nv
+  original_solution = solve_clauses(clauses, solver)
 
-  clauses, nv = sat_a_3sat(clauses, nv)
+  clauses, nv = sat_to_3_sat(clauses, nv)
   if sat > 3:
     x_sat = 3
     while x_sat < sat:
-      clauses, nv = reducir_a_xsat(clauses, nv)
+      clauses, nv = reduce_to_x_sat(clauses, nv)
       x_sat += 1
 
-  solucion_xsat = False
-
-  with Glucose4(bootstrap_with=clauses) as m:
-    solucion_xsat = m.solve()
-
-  print("Archivo", filename, "|| solucion original:", solucion_original, "|| solucion " + str(sat) + "-SAT:", solucion_xsat, "|| coinciden:", solucion_original == solucion_xsat)
-
+  x_sat_solution = solve_clauses(clauses, solver)
   formula.clauses = clauses
   formula.nv = nv
   formula.to_file("./X-SAT/" + filename)
+
+  elapsed_time = time.time() - start_time
+  match = original_solution == x_sat_solution
+
+  print("Archivo {} || solucionador de sat {} || solucion original: {} || solucion {}-SAT: {} || coinciden: {} || Tiempo ejecución: {}".format(filename, solver, original_solution, sat, x_sat_solution, match, elapsed_time))

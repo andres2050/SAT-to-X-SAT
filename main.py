@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import time
 import math
 import sys
@@ -10,21 +12,21 @@ from multiprocessing import cpu_count
 from functools import partial
 from wrapt_timeout_decorator import *
 from helper import *
+from solvers import *
 
 '''Define function to run mutiple processors and pool the results together'''
-def run_multiprocessing(func, i, sat, timeout_time, n_processors):
+def run_multiprocessing(func, i, sat, solver, timeout_time, n_processors):
     with Pool(processes=n_processors) as pool:
-        return pool.map(partial(func, sat=sat, timeout_time=timeout_time), i)
+        return pool.map(partial(func, sat=sat, solver=solver, timeout_time=timeout_time), i)
 
 '''Define task function'''
-def control_proccess_sat_file(filename, sat, timeout_time):
+def control_proccess_sat_file(filename, sat, solver, timeout_time):
     try:
-        timeout(timeout_time)(proccess_sat_file)(sat, filename)
+        timeout(timeout_time)(proccess_sat_file)(filename, sat, solver)
     except TimeoutError:
-        print("Archivo", filename, "|| Excedió el tiempo de ejecución de", timeout_time, "segundos.")
+        print("Archivo", filename, "|| Excedió el tiempo de ejecución de", timeout_time, "segundos || Solucionador de sat:", solver)
 
-
-def main(sat, timeout_time):
+def main(sat, solver, timeout_time):
     start_time = time.time()
 
     files = []
@@ -41,7 +43,7 @@ def main(sat, timeout_time):
     '''
     pass the task function, followed by the parameters to processors
     '''
-    run_multiprocessing(control_proccess_sat_file, x_ls, sat, timeout_time, n_processors)
+    run_multiprocessing(control_proccess_sat_file, x_ls, sat, solver, timeout_time, n_processors)
 
     elapsed_time = time.time() - start_time
     print("Tiempo transcurrido: %.10f segundos." % elapsed_time)
@@ -61,6 +63,12 @@ if __name__ == "__main__":
         temp_timeout_time = int(sys.argv[2].strip())
         if temp_timeout_time > 0:
             timeout_time = temp_timeout_time
+    
+    solver = "glucose4"
+    if len(sys.argv) >= 4 and sys.argv[3].strip() != "":
+        temp_solver = sys.argv[3].strip()
+        if is_solver_avaliable(temp_solver):
+            solver = temp_solver
 
     if os.path.exists('./X-SAT'):
         shutil.rmtree('./X-SAT', ignore_errors=True)
@@ -68,4 +76,4 @@ if __name__ == "__main__":
     os.makedirs('./X-SAT')
 
     freeze_support()   # required to use multiprocessing
-    main(sat, timeout_time)
+    main(sat, solver, timeout_time)
