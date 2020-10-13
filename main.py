@@ -24,7 +24,7 @@ def control_proccess_sat_file(filename, sat, solver, timeout_time):
   try:
     timeout(timeout_time)(proccess_sat_file)(filename, sat, solver)
   except TimeoutError:
-    print("Archivo", filename, "|| Excedió el tiempo de ejecución de", timeout_time, "segundos || Solucionador de sat:", solver)
+    print(filename, "|| solver", solver, "|| Excedió el tiempo de ejecución de", timeout_time, "segundos")
 
 '''Define main function'''
 def main(sat, solver, timeout_time, n_processors):

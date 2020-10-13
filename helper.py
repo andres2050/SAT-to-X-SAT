@@ -3,6 +3,7 @@
 import time
 from pysat.formula import CNF
 from solvers import *
+from wrapt_timeout_decorator import *
 
 '''
 split_list: Based on a length it divides an array and creates an array of arrays.
@@ -109,10 +110,14 @@ proccess_sat_file: It obtains the file, reduces it to X-SAT, obtains the solutio
 def proccess_sat_file(filename, sat, solver):
   start_time = time.time()
 
+  result = "{} || solver {} ".format(filename, solver)
   formula = CNF(from_file="./InstanciasSAT/" + filename)
   clauses = formula.clauses[:]
   nv = formula.nv
+
+  original_time = time.time()
   original_solution = solve_clauses(clauses, solver)
+  result += "|| original: {} || Tiempo: {:.10f} segundos ".format(original_solution, time.time() - original_time)
 
   clauses, nv = sat_to_3_sat(clauses, nv)
   if sat > 3:
@@ -121,12 +126,14 @@ def proccess_sat_file(filename, sat, solver):
       clauses, nv = reduce_to_x_sat(clauses, nv)
       x_sat += 1
 
+  x_sat_time = time.time()
   x_sat_solution = solve_clauses(clauses, solver)
+  result += "|| {}-SAT: {} || Tiempo: {:.10f} segundos ".format(sat, x_sat_solution, time.time() - x_sat_time)
+
   formula.clauses = clauses
   formula.nv = nv
   formula.to_file("./X-SAT/" + filename)
 
-  elapsed_time = time.time() - start_time
-  match = original_solution == x_sat_solution
+  result += "|| Tiempo total: {:.10f} segundos".format(time.time() - start_time)
+  print(result)
 
-  print("Archivo {} || solucionador de sat {} || solucion original: {} || solucion {}-SAT: {} || coinciden: {} || Tiempo ejecución: {:.10f} segundos".format(filename, solver, original_solution, sat, x_sat_solution, match, elapsed_time))
